@@ -1,0 +1,42 @@
+# Starter pipeline
+
+trigger:
+  branches:
+    include:
+      - master
+  paths:
+    include:
+      - azurebcproject2/mainfest
+
+pool:
+  name: Default
+  demands:
+    - Agent.name -equals azure-vm
+
+stages:
+  - stage: dev
+    displayName: "Deploy kubernetes"
+    jobs:
+      - job: deploy_kubectl_job
+        displayName: "Deploy Kubernetes Job"
+        steps:
+
+          # --------------------------------------
+          # Install Terraform manually (reliable)
+          # --------------------------------------
+          - task: KubectlInstaller@0
+            inputs:
+              kubectlVersion: 'latest'
+
+          - task: Kubernetes@1
+            inputs:
+              connectionType: 'Kubernetes Service Connection'
+              kubernetesServiceEndpoint: 'Akscluster'
+              namespace: 'default'
+              command: 'apply'
+              useConfigurationFile: true
+              configuration: 'azurebcproject2/mainfest/azure-aks2.yaml'
+              secretType: 'dockerRegistry'
+              containerRegistryType: 'Azure Container Registry'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/azurebcproject2/mainfest'
+
