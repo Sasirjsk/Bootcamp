@@ -6,7 +6,7 @@ trigger:
       - master
   paths:
     include:
-      - azurebcproject2/mainfest
+      - azurebcproject2/manifest
 
 pool:
   name: Default
@@ -35,8 +35,8 @@ stages:
               namespace: 'default'
               command: 'apply'
               useConfigurationFile: true
-              configuration: 'azurebcproject2/mainfest/azure-aks2.yaml'
+              configuration: 'azurebcproject2/manifest/azure-aks2.yaml'
               secretType: 'dockerRegistry'
               containerRegistryType: 'Azure Container Registry'
-              workingDirectory: '$(System.DefaultWorkingDirectory)/azurebcproject2/mainfest'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/azurebcproject2/manifest'
 
