@@ -1,0 +1,58 @@
+trigger:
+- none
+
+pool:
+  name: Default
+  demands:
+    - Agent.name -equals azure-vm
+
+
+stages:
+  - stage: deploy_Destroy
+    jobs:
+      - job: terraform_deploy_destroy
+        steps:
+          # --------------------------------------
+          # Install Terraform manually (reliable)
+          # --------------------------------------
+          - script: |
+              sudo apt-get update
+              sudo apt-get install -y unzip curl jq ca-certificates
+              
+              echo "Downloading Terraform..."
+              curl -s -o terraform.zip https://releases.hashicorp.com/terraform/1.14.1/terraform_1.14.1_linux_amd64.zip
+
+              echo "Extracting Terraform..."
+              unzip -o terraform.zip
+
+              echo "Installing Terraform to /usr/local/bin..."
+              sudo mv terraform /usr/local/bin/terraform
+              sudo chmod +x /usr/local/bin/terraform
+
+              echo "Terraform installed:"
+              terraform version
+            displayName: "Install Terraform manually"
+
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: 'latest'
+
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/azurebcproject2/env/dev'
+              backendAzureRmUseEntraIdForAuthentication: false
+              backendServiceArm: 'Azure-Service-connection'
+              backendAzureRmResourceGroupName: 'tfstate-rg'
+              backendAzureRmStorageAccountName: 'tfstatesacct0t123'
+              backendAzureRmContainerName: 'tfstate'
+              backendAzureRmKey: 'aks/dev.tfstate'
+
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'destroy'
+              workingDirectory: '$(System.DefaultWorkingDirectory)/azurebcproject2/env/dev'
+              commandOptions: '--var-file=dev.tfvars --auto-approve'
+              environmentServiceNameAzureRM: 'Azure-Service-connection'
